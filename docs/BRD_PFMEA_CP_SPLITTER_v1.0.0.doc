@@ -1,144 +1,154 @@
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
 <meta charset='utf-8'>
-<title>BRD - PFMEA-CP SPLITTER v1.0.0</title>
+<title>COMPREHENSIVE BRD - PFMEA-CP SPLITTER v1.0.0</title>
 <style>
-body { font-family: Arial, sans-serif; line-height: 1.5; }
-h1, h2, h3, h4 { color: #2c3e50; }
-.highlight { font-weight: bold; color: #d35400; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
-th, td { border: 1px solid #bdc3c7; padding: 8px; text-align: left; }
-th { background-color: #f8f9fa; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px;}
+h1 { color: #1a5276; text-align: center; border-bottom: 3px solid #2980b9; padding-bottom: 10px; text-transform: uppercase;}
+h2 { color: #2980b9; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px; margin-top: 30px;}
+h3 { color: #d35400; margin-top: 25px;}
+h4 { color: #8e44ad; }
+.highlight { font-weight: bold; color: #e74c3c; }
+.code-block { background: #f4f6f7; padding: 10px; border-left: 4px solid #3498db; font-family: monospace; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+th, td { border: 1px solid #bdc3c7; padding: 12px; text-align: left; }
+th { background-color: #34495e; color: white; }
+tr:nth-child(even) { background-color: #f9f9f9; }
+.badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white;}
+.badge-info { background-color: #3498db; }
+.badge-success { background-color: #2ecc71; }
+.badge-warn { background-color: #f39c12; }
+.badge-error { background-color: #e74c3c; }
 </style>
 </head>
 <body>
 
-<h1>BUSINESS REQUIREMENT DOCUMENT (BRD)</h1>
-<h2>Project: PFMEA-CP SPLITTER BY PROCESS FOR GENERAL WORKCELL</h2>
+<h1>SOFTWARE REQUIREMENT SPECIFICATION (SRS) & BRD</h1>
+<h2>Project: PFMEA-CP SPLITTER BY PROCESS (GENERAL WORKCELL)</h2>
 <p><strong>Version:</strong> 1.0.0</p>
+<p><strong>Document Purpose:</strong> Tài liệu này cung cấp toàn bộ đặc tả kiến trúc, UI/UX và logic nghiệp vụ phiên bản 1.0.0. Dùng để backup, giúp Developer có thể tái thiết kế hệ thống từ con số 0 trong trường hợp mất Source Code.</p>
 <hr>
 
-<h2>I. YÊU CẦU CHỨC NĂNG WEB APP</h2>
+<h2>I. SYSTEM ARCHITECTURE & DEPENDENCIES (KIẾN TRÚC HỆ THỐNG)</h2>
+<ul>
+    <li><strong>Mô hình:</strong> 100% Client-side Web Application (Chỉ sử dụng trình duyệt, không máy chủ backend). Dữ liệu hoàn toàn được xử lý cục bộ tại máy tính người dùng.</li>
+    <li><strong>Core Technology:</strong> HTML5, Vanilla CSS, Vanilla JavaScript (ES6+).</li>
+    <li><strong>Thư viện bên thứ ba (CDN):</strong>
+        <ul>
+            <li><code>ExcelJS (4.3.0)</code>: Sử dụng làm Core Engine cho cả <strong>ĐỌC</strong> file gốc và <strong>GHI</strong> dữ liệu vào Template. Giúp giữ nguyên hoàn toàn Style, định dạng ô, và Data Validation của file Excel đích.</li>
+            <li><code>JSZip (3.10.1)</code>: Thư viện nén tất cả các file Excel và Log thành 1 cục Archive (.zip) duy nhất.</li>
+            <li><code>FileSaver.js (2.0.5)</code>: Xử lý blob buffer và trigger popup tải xuống cho người dùng.</li>
+        </ul>
+    </li>
+</ul>
 
-<h3>1. Input Requirements (Quản lý Đầu vào)</h3>
+<h2>II. UI/UX DESIGN SYSTEM & INTERACTION (THIẾT KẾ GIAO DIỆN)</h2>
+<h3>1. Cấu trúc Layout (Split Layout)</h3>
+<p>Giao diện được chia thành 2 phần chính sử dụng CSS Flexbox/Grid:</p>
+<ul>
+    <li><strong>Upload Panel (Card Trái):</strong> Nơi chứa 3 ô chọn file (Source, FMEA Template, PCP Template). Sử dụng Custom Input (ẩn &lt;input type="file"&gt; mặc định) để hiển thị tên file và nút Browse chuẩn UI/UX. Nút <strong>EXECUTION</strong> có trạng thái disabled cho đến khi đủ 3 file.</li>
+    <li><strong>Terminal Console (Card Phải):</strong> Màn hình giả lập Terminal của Developer.
+        <ul>
+            <li>Header có 3 dấu chấm (Đỏ, Vàng, Xanh) phong cách MacOS.</li>
+            <li>Box nội dung có Auto-scroll để hiển thị log mới nhất ở dưới cùng.</li>
+            <li>Progress Bar thanh tiến độ chạy ngang bên dưới Terminal.</li>
+        </ul>
+    </li>
+</ul>
+
+<h3>2. Theme & Styling</h3>
+<ul>
+    <li><strong>Chế độ Sáng (Mặc định):</strong> Nền màu kem trắng, Card trắng tinh, đổ bóng (box-shadow) nhẹ, chữ xám đen. Nút bấm màu Xanh biển (#2563eb).</li>
+    <li><strong>Chế độ Tối (Dark Mode):</strong> Kích hoạt bằng icon mặt trăng. <code>data-theme="dark"</code> áp dụng lên tag <code>&lt;html&gt;</code> sẽ đổi biến CSS thành nền xanh đen thẫm (#0f172a), Card màu xám đen (#1e293b), chữ xám trắng để không gây chói mắt.</li>
+    <li><strong>Đa ngôn ngữ (i18n):</strong> Hệ thống ánh xạ (Mapping dictionary) gán text tiếng Việt/Anh dựa vào thuộc tính <code>data-lang</code>. Kích hoạt qua nút EN/VN trên góc phải.</li>
+</ul>
+
+<h2>III. CORE BUSINESS LOGIC & DATA PROCESSING (LOGIC CỐT LÕI)</h2>
+
+<h3>1. Data Mapping Rules (Quy tắc Ánh xạ)</h3>
+<p>Phiên bản 1.0.0 chỉ hỗ trợ General Workcell với tiêu chuẩn 12 cột. Quy tắc lấy và đổ dữ liệu như sau:</p>
 <table>
     <tr>
-        <th>#</th>
-        <th>Input Element</th>
-        <th>Format</th>
-        <th>Mandatory</th>
-        <th>Description & Constraints</th>
+        <th>Tiêu chí</th>
+        <th>PFMEA Sheet</th>
+        <th>PCP Sheet</th>
     </tr>
     <tr>
-        <td>1</td>
-        <td><strong>Source Workbook</strong></td>
-        <td>.xlsx, .xlsm</td>
-        <td>Yes</td>
-        <td>Dữ liệu gốc chứa sheet PFMEA (quét từ cột F) và PCP (quét từ cột E).</td>
+        <td><strong>Start Row (Dòng bắt đầu)</strong></td>
+        <td>Dòng 33</td>
+        <td>Dòng 30</td>
     </tr>
     <tr>
-        <td>2</td>
-        <td><strong>FMEA Template</strong></td>
-        <td>.xlsx, .xlsm</td>
-        <td>Yes</td>
-        <td>File Excel mẫu (Template) để đổ dữ liệu FMEA vào.</td>
+        <td><strong>Process Column (Cột tên tiến trình)</strong></td>
+        <td>Cột C (Index 2)</td>
+        <td>Cột B (Index 1)</td>
     </tr>
     <tr>
-        <td>3</td>
-        <td><strong>PCP Template</strong></td>
-        <td>.xlsx, .xlsm</td>
-        <td>Yes</td>
-        <td>File Excel mẫu (Template) để đổ dữ liệu PCP vào.</td>
+        <td><strong>Data Columns (12 Cột cần lấy)</strong></td>
+        <td>Từ cột F tới Q (Index 5 to 16)</td>
+        <td>Từ cột E tới P (Index 4 to 15)</td>
+    </tr>
+    <tr>
+        <td><strong>Destination (Đổ vào Template)</strong></td>
+        <td>Bắt đầu từ Dòng 2, Cột A tới L</td>
+        <td>Bắt đầu từ Dòng 2, Cột A tới L</td>
     </tr>
 </table>
 
-<h3>2. Data Reading & Output Mapping (Đọc và Ánh xạ dữ liệu)</h3>
+<h3>2. Continuous Data Algorithm (Thuật toán quét & Bắt lỗi ngắt quãng)</h3>
+<div class="code-block">
+1. Dùng ExcelJS `ws.eachRow` để duyệt qua toàn bộ dòng trong file tính từ Start Row.<br>
+2. Biến `gapCount` theo dõi các dòng trống. Nếu ô Process bị bỏ trống, `gapCount++`.<br>
+3. Nếu phát hiện một Process mới, reset `gapCount = 0`.<br>
+4. Nếu `gapCount &gt; 15`: Xác định dữ liệu bị ngắt quãng bất thường. Kích hoạt lỗi [ERROR] "Data is not continuous", dừng hoàn toàn việc tạo file Excel, chỉ xuất File Log.
+</div>
+
+<h3>3. File Generation Flow (Luồng tạo file)</h3>
 <ul>
-    <li><strong>Vùng quét PFMEA:</strong> Quét từ dòng 33. Tên Process ở cột C. Dữ liệu chi tiết nằm ở 12 cột tính từ cột F.</li>
-    <li><strong>Vùng quét PCP:</strong> Quét từ dòng 30. Tên Process ở cột B. Dữ liệu chi tiết nằm ở 12 cột tính từ cột E.</li>
-    <li><strong>Gom nhóm dữ liệu:</strong> Dữ liệu gom theo Process và bắt buộc phải liên tục.</li>
-    <li><strong>Xử lý khoảng trống bất thường:</strong> Hệ thống quét toàn bộ file để tìm dòng cuối cùng thực sự. Nếu phát hiện một khoảng trống lớn (VD: 15 dòng trống liên tiếp) nhưng bên dưới vẫn còn dữ liệu, hệ thống sẽ ghi một WARNING (hoặc ERROR) vào file log: "Detected too many empty rows between data rows (Data is not continuous)". Đồng thời, hủy bỏ hoàn toàn việc tách file (Không xuất ra Excel). Hệ thống chỉ trả về file log.txt để người dùng vào file gốc sửa lại cho liền mạch.</li>
-    <li><strong>Output Mapping:</strong> Đổ thẳng 12 cột vào Template bắt đầu từ cột A, từ dòng số 2.</li>
+    <li>Hệ thống lưu dữ liệu vào một Dictionary (Object), Key là tên Process, Value là mảng chứa các dòng dữ liệu của FMEA và PCP tương ứng.</li>
+    <li>Duyệt qua từng Process trong Dictionary. Nếu vượt qua khâu Validation, tiến hành dùng ExcelJS load Buffer của Template gốc, ghi dữ liệu 2D array vào sheet tương ứng, sau đó lưu ra định dạng `.xlsx` đẩy vào JSZip.</li>
 </ul>
 
-<h3>3. Cross-check Validation (Kiểm tra chéo)</h3>
+<h2>IV. CROSS-CHECK VALIDATION (KIỂM TRA CHÉO)</h2>
+<p>Logic đảm bảo tính toàn vẹn của dữ liệu giữa FMEA và PCP. Bất kỳ lỗi [ERROR] nào xuất hiện, Process đó sẽ bị loại bỏ (Skip) không tạo file.</p>
 <table>
     <tr>
         <th>Check Type</th>
-        <th>Description</th>
-        <th>Action</th>
+        <th>Điều kiện kích hoạt</th>
+        <th>Severity</th>
     </tr>
     <tr>
-        <td><strong>Row Count</strong></td>
-        <td>So sánh tổng số dòng của từng Process giữa PFMEA và PCP.</td>
-        <td><span class="highlight">[ERROR]</span> - Bỏ qua Process</td>
+        <td><strong>Row Count Mismatch</strong></td>
+        <td>Tổng số lượng dòng thu thập được của một Process trong PFMEA không bằng tổng số dòng trong PCP.</td>
+        <td><span class="badge badge-error">ERROR</span></td>
     </tr>
     <tr>
-        <td><strong>Empty Cells</strong></td>
-        <td>Kiểm tra ô trống trong vùng quét 12 cột.</td>
-        <td><span class="highlight">[ERROR]</span></td>
+        <td><strong>Empty Cells Detected</strong></td>
+        <td>Bất kỳ ô nào trong vùng 12 cột của PFMEA hoặc PCP là rỗng (null/undefined/blank).</td>
+        <td><span class="badge badge-error">ERROR</span></td>
     </tr>
     <tr>
-        <td><strong>Data Matching</strong></td>
-        <td>So khớp 4 cặp: PFMEA (F) vs PCP (F), PFMEA (G) vs PCP (G), PFMEA (H) vs PCP (H), PFMEA (L) vs PCP (I).</td>
-        <td>Sai khoảng trắng: <span class="highlight">[WARNING]</span><br>Sai khác hoàn toàn: <span class="highlight">[ERROR]</span></td>
+        <td><strong>Data Matching (Khác biệt chữ)</strong></td>
+        <td>Nội dung chữ của 4 cặp cột không khớp nhau hoàn toàn:<br>- PFMEA Cột F (Chức năng) so với PCP Cột F.<br>- PFMEA Cột G (Yêu cầu) so với PCP Cột G.<br>- PFMEA Cột H (Đặc tính) so với PCP Cột H.<br>- PFMEA Cột L (PP đo) so với PCP Cột I.</td>
+        <td><span class="badge badge-error">ERROR</span></td>
+    </tr>
+    <tr>
+        <td><strong>Data Matching (Sai khoảng trắng)</strong></td>
+        <td>Nội dung giống nhau nhưng khác nhau về số lượng dấu cách (Space) thừa.</td>
+        <td><span class="badge badge-warn">WARNING</span></td>
     </tr>
 </table>
 
-<h3>4. Output Requirements & Logging (Xử lý Đầu ra & File Log)</h3>
-<table>
-    <tr>
-        <th>#</th>
-        <th>Output Element</th>
-        <th>Format</th>
-        <th>Description & Conventions</th>
-    </tr>
-    <tr>
-        <td>1</td>
-        <td><strong>FMEA Process File</strong></td>
-        <td>.xlsx</td>
-        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_FMEA.xlsx</code></td>
-    </tr>
-    <tr>
-        <td>2</td>
-        <td><strong>PCP Process File</strong></td>
-        <td>.xlsx</td>
-        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_PCP.xlsx</code></td>
-    </tr>
-    <tr>
-        <td>3</td>
-        <td><strong>System Log</strong></td>
-        <td>.txt</td>
-        <td>Execution log recorded entirely in <strong>English</strong>. Timestamped <code>[YYYY-MM-DD HH:MM:SS]</code>, aggregates total counts of <strong>[ERROR]</strong> and <strong>[WARNING]</strong>.</td>
-    </tr>
-    <tr>
-        <td>4</td>
-        <td><strong>Download Package</strong></td>
-        <td>.zip</td>
-        <td>A single compressed package containing all valid Excel files and the log file. <br><em>Naming Convention:</em> <code>Report_[YYYYMMDD_HHMMSS].zip</code></td>
-    </tr>
-</table>
-
-<h3>5. Giao diện Người dùng (UI)</h3>
+<h2>V. OUTPUT & LOGGING</h2>
 <ul>
-    <li><strong>Chủ đề (Theme):</strong> Thiết kế tối giản, tông màu Trắng - Xanh biển. Có nút chuyển đổi Sáng/Tối.</li>
-    <li><strong>Đa ngôn ngữ:</strong> Nút chuyển đổi (Toggle) giữa Tiếng Việt và Tiếng Anh.</li>
-    <li><strong>Footer:</strong> Chân trang hiển thị phiên bản phần mềm.</li>
-</ul>
-
-<hr>
-<h2>II. CHIẾN LƯỢC QUẢN LÝ PHIÊN BẢN (VERSIONING)</h2>
-<ul>
-    <li><strong>1. Áp dụng Semantic Versioning (Major.Minor.Patch):</strong>
+    <li><strong>Console Output:</strong> Mỗi bước quét, phân tích, tạo file đều in ra màn hình Terminal với màu sắc tương ứng. Bắt buộc dùng <code>await new Promise</code> để nhả block main-thread, giúp người dùng nhìn thấy log chạy.</li>
+    <li><strong>Download File (.zip):</strong> 
         <ul>
-            <li>Patch (v1.0.1): Sửa lỗi vặt, không thay đổi chức năng.</li>
-            <li>Minor (v1.1.0): Cập nhật tính năng mới, không làm ảnh hưởng tính năng cũ.</li>
-            <li>Major (v2.0.0): Cập nhật lớn, thay đổi logic cốt lõi hoặc UI/UX.</li>
+            <li>File ZIP tên <code>Report_[YYYYMMDD_HHMMSS].zip</code>.</li>
+            <li>Bên trong chứa file: <code>[Tên Process]_FMEA.xlsx</code> và <code>[Tên Process]_PCP.xlsx</code> (chỉ những file Pass Validation).</li>
+            <li>Bên trong chứa thêm file <code>log.txt</code> lưu toàn bộ lịch sử Console bằng tiếng Anh để đối chiếu.</li>
         </ul>
     </li>
-    <li><strong>2. Release Notes (Lịch sử cập nhật):</strong> Tích hợp nút "Release Notes" ở Footer của Web App.</li>
-    <li><strong>3. Quản lý Yêu cầu (Requirements):</strong> File BRD được lưu trữ và cập nhật tương ứng với từng phiên bản.</li>
-    <li><strong>4. Version Control (Git):</strong> Sử dụng Git để quản lý mã nguồn.</li>
 </ul>
 
 </body>
