@@ -98,6 +98,45 @@ header {
     background: var(--border-color);
 }
 
+.tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-pane {
+    display: none;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tab-pane.active {
+    display: flex;
+}
+
 .card {
     background-color: var(--surface-color);
     border-radius: var(--border-radius);
@@ -207,6 +246,13 @@ header {
     background-color: var(--text-secondary);
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.zebra-btn {
+    background-color: #6366f1;
+}
+.zebra-btn:hover:not(:disabled) {
+    background-color: #4f46e5;
 }
 
 .terminal-card {

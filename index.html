@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PFMEA-CP SPLITTER BY PROCESS FOR GENERAL WORKCELL (v1.0)</title>
+    <title>PFMEA-CP SPLITTER BY PROCESS (v1.1.0)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -32,65 +32,122 @@
             </div>
         </header>
 
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="general" data-lang="tab_general">General Workcell</button>
+            <button class="tab-btn" data-tab="zebra" data-lang="tab_zebra">Zebra Workcell</button>
+        </div>
+
         <main>
-            <div class="card">
-                <h2 data-lang="upload_files">Upload Files</h2>
-                <p class="subtitle" data-lang="upload_desc">Please select the required Excel files to begin the process.</p>
-                
-                <div class="file-inputs">
-                    <div class="input-group">
-                        <label data-lang="src_workbook">Source Workbook</label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" id="srcFile" accept=".xlsx,.xlsm" />
-                            <div class="custom-file-upload">
-                                <span class="file-name" id="srcFileName" data-lang="choose_file">Choose file...</span>
-                                <button class="browse-btn" data-lang="browse">Browse</button>
+            <!-- General Tab Content -->
+            <div id="pane_general" class="tab-pane active">
+                <div class="card">
+                    <h2 data-lang="upload_files">Upload Files</h2>
+                    <p class="subtitle" data-lang="upload_desc_general">Upload standard template files for General processing.</p>
+                    <div class="file-inputs">
+                        <div class="input-group">
+                            <label data-lang="src_workbook">Source Workbook</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="srcFile_general" accept=".xlsx,.xlsm" />
+                                <div class="custom-file-upload">
+                                    <span class="file-name" id="srcFileName_general" data-lang="choose_file">Choose file...</span>
+                                    <button class="browse-btn" data-lang="browse">Browse</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label data-lang="fmea_template">FMEA Template</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="fmeaFile_general" accept=".xlsx,.xlsm" />
+                                <div class="custom-file-upload">
+                                    <span class="file-name" id="fmeaFileName_general" data-lang="choose_file">Choose file...</span>
+                                    <button class="browse-btn" data-lang="browse">Browse</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label data-lang="pcp_template">PCP Template</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="pcpFile_general" accept=".xlsx,.xlsm" />
+                                <div class="custom-file-upload">
+                                    <span class="file-name" id="pcpFileName_general" data-lang="choose_file">Choose file...</span>
+                                    <button class="browse-btn" data-lang="browse">Browse</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="input-group">
-                        <label data-lang="fmea_template">FMEA Template</label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" id="fmeaFile" accept=".xlsx,.xlsm" />
-                            <div class="custom-file-upload">
-                                <span class="file-name" id="fmeaFileName" data-lang="choose_file">Choose file...</span>
-                                <button class="browse-btn" data-lang="browse">Browse</button>
-                            </div>
-                        </div>
+                    <button id="execBtn_general" class="primary-btn" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span data-lang="execute">EXECUTION</span>
+                    </button>
+                </div>
+                <div class="card terminal-card">
+                    <div class="terminal-header">
+                        <h2 data-lang="console_log">Console Log</h2>
+                        <div class="terminal-dots"><span></span><span></span><span></span></div>
                     </div>
-
-                    <div class="input-group">
-                        <label data-lang="pcp_template">PCP Template</label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" id="pcpFile" accept=".xlsx,.xlsm" />
-                            <div class="custom-file-upload">
-                                <span class="file-name" id="pcpFileName" data-lang="choose_file">Choose file...</span>
-                                <button class="browse-btn" data-lang="browse">Browse</button>
-                            </div>
-                        </div>
+                    <div class="terminal" id="consoleOutput_general">
+                        <div class="log-line info">Waiting for files...</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar_general"></div>
                     </div>
                 </div>
-
-                <button id="execBtn" class="primary-btn" disabled>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    <span data-lang="execute">EXECUTION</span>
-                </button>
             </div>
 
-            <div class="card terminal-card">
-                <div class="terminal-header">
-                    <h2 data-lang="console_log">Console Log</h2>
-                    <div class="terminal-dots">
-                        <span></span><span></span><span></span>
+            <!-- Zebra Tab Content -->
+            <div id="pane_zebra" class="tab-pane">
+                <div class="card">
+                    <h2 data-lang="upload_files">Upload Files</h2>
+                    <p class="subtitle" data-lang="upload_desc_zebra">Upload Micro template files for Zebra processing.</p>
+                    <div class="file-inputs">
+                        <div class="input-group">
+                            <label data-lang="src_workbook">Source Workbook</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="srcFile_zebra" accept=".xlsx,.xlsm" />
+                                <div class="custom-file-upload">
+                                    <span class="file-name" id="srcFileName_zebra" data-lang="choose_file">Choose file...</span>
+                                    <button class="browse-btn" data-lang="browse">Browse</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label data-lang="fmea_template">FMEA Template</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="fmeaFile_zebra" accept=".xlsx,.xlsm" />
+                                <div class="custom-file-upload">
+                                    <span class="file-name" id="fmeaFileName_zebra" data-lang="choose_file">Choose file...</span>
+                                    <button class="browse-btn" data-lang="browse">Browse</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label data-lang="pcp_template">PCP Template</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="pcpFile_zebra" accept=".xlsx,.xlsm" />
+                                <div class="custom-file-upload">
+                                    <span class="file-name" id="pcpFileName_zebra" data-lang="choose_file">Choose file...</span>
+                                    <button class="browse-btn" data-lang="browse">Browse</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    <button id="execBtn_zebra" class="primary-btn zebra-btn" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span data-lang="execute">EXECUTION</span>
+                    </button>
                 </div>
-                <div class="terminal" id="consoleOutput">
-                    <div class="log-line info">Waiting for files...</div>
-                </div>
-                
-                <div class="progress-container">
-                    <div class="progress-bar" id="progressBar"></div>
+                <div class="card terminal-card">
+                    <div class="terminal-header">
+                        <h2 data-lang="console_log">Console Log</h2>
+                        <div class="terminal-dots"><span></span><span></span><span></span></div>
+                    </div>
+                    <div class="terminal" id="consoleOutput_zebra">
+                        <div class="log-line info">Waiting for files...</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar_zebra"></div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -98,7 +155,7 @@
         <footer>
             <div class="footer-content">
                 <div class="footer-primary">
-                    <span class="version-text">PFMEA-CP SPLITTER BY PROCESS FOR GENERAL WORKCELL (v1.0.0)</span>
+                    <span class="version-text">PFMEA-CP SPLITTER BY PROCESS (v1.1.0)</span>
                     <button id="releaseNotesBtn" class="link-btn" data-lang="release_notes">Release Notes</button>
                 </div>
                 <div class="footer-secondary">
@@ -119,13 +176,21 @@
             </div>
             <div class="modal-body">
                 <div class="release-item">
+                    <div class="release-version">v1.1.0</div>
+                    <div class="release-date">August 03, 2026</div>
+                    <ul class="release-changes">
+                        <li>Added Zebra Workcell tab.</li>
+                        <li>Implemented 14-column extraction logic for Zebra.</li>
+                        <li>Updated template mapping for Micro templates.</li>
+                        <li>Expanded cross-check validation with 2 new pairs.</li>
+                    </ul>
+                </div>
+                <div class="release-item">
                     <div class="release-version">v1.0.0</div>
                     <div class="release-date">July 26, 2026</div>
                     <ul class="release-changes">
                         <li>Initial release of Web Application.</li>
                         <li>Automated PFMEA and PCP data splitting.</li>
-                        <li>Cross-check validation with error/warning logs.</li>
-                        <li>Dark mode and English/Vietnamese toggles.</li>
                     </ul>
                 </div>
             </div>
