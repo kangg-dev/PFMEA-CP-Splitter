@@ -192,70 +192,78 @@ function setupWorkcell(modePrefix) {
                     return;
                 }
                 logMessage(`Scanning ${sheetName} sheet...`, "info");
-                
-                const colIndexReal = colIdx; 
+
+                // STEP 1: Collect only rows that actually exist in the file (eachRow skips
+                // phantom rows created by stray formatting). Filter to data region only.
+                const existingRows = [];
+                ws.eachRow((row, rowNumber) => {
+                    if (rowNumber >= startRow) existingRows.push({ row, rowNumber });
+                });
+
+                // STEP 2: Find the true last data row (last row where process col is non-empty)
+                let lastDataIdx = -1;
+                for (let i = existingRows.length - 1; i >= 0; i--) {
+                    const val = existingRows[i].row.getCell(colIdx).value;
+                    if (val !== null && val !== undefined && String(val).trim() !== "") {
+                        lastDataIdx = i;
+                        break;
+                    }
+                }
+
+                if (lastDataIdx === -1) {
+                    logMessage(`No data found in sheet ${sheetName} from row ${startRow}.`, "warn");
+                    return;
+                }
+
+                // STEP 3: Only iterate rows up to and including the last data row
+                const dataRegion = existingRows.slice(0, lastDataIdx + 1);
+
                 let gapCount = 0;
                 let previousRowNumber = startRow - 1;
-                
-                ws.eachRow((row, rowNumber) => {
-                    if (hasGapError) return;
-                    if (rowNumber < startRow) return;
-                    
-                    gapCount += (rowNumber - previousRowNumber - 1);
-                    
-                    const p = row.getCell(colIndexReal).value;
-                    
-                    if (p) {
+
+                for (const { row, rowNumber } of dataRegion) {
+                    if (hasGapError) break;
+
+                    // Count implicit empty rows between consecutive existing rows
+                    const implicitGap = (rowNumber - previousRowNumber - 1);
+                    gapCount += implicitGap;
+
+                    const p = row.getCell(colIdx).value;
+
+                    if (p !== null && p !== undefined && String(p).trim() !== "") {
                         if (gapCount > 15) {
                             logMessage(`Detected too many empty rows between data rows (Data is not continuous) near row ${rowNumber}`, "error");
                             hasGapError = true;
-                            return;
+                            break;
                         }
                         gapCount = 0;
                         const p_key = String(p).trim();
                         if (!allData[p_key]) allData[p_key] = { FMEA: [], PCP: [] };
-                        
+
                         const rowData = [];
-                        if (modePrefix === "general") {
-                            const colStart = mode === "FMEA" ? 6 : 5;
-                            for (let c = colStart; c < colStart + 12; c++) {
-                                let val = row.getCell(c).value;
-                                if(val && typeof val === 'object') {
-                                    if(val.result !== undefined) val = val.result;
-                                    else if(val.richText) val = val.richText.map(rt => rt.text).join('');
-                                }
-                                rowData.push(val);
+                        const colsToExtract = modePrefix === "general"
+                            ? (mode === "FMEA"
+                                ? [6,7,8,9,10,11,12,13,14,15,16,17]
+                                : [5,6,7,8,9,10,11,12,13,14,15,16])
+                            : (mode === "FMEA"
+                                ? [4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+                                : [3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+
+                        colsToExtract.forEach(c => {
+                            let val = row.getCell(c).value;
+                            if (val && typeof val === 'object') {
+                                if (val.result !== undefined) val = val.result;
+                                else if (val.richText) val = val.richText.map(rt => rt.text).join('');
                             }
-                        } else if (modePrefix === "zebra") {
-                            if (mode === "FMEA") {
-                                const colsToExtract = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-                                colsToExtract.forEach(c => {
-                                    let val = row.getCell(c).value;
-                                    if(val && typeof val === 'object') {
-                                        if(val.result !== undefined) val = val.result;
-                                        else if(val.richText) val = val.richText.map(rt => rt.text).join('');
-                                    }
-                                    rowData.push(val);
-                                });
-                            } else if (mode === "PCP") {
-                                const colsToExtract = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-                                colsToExtract.forEach(c => {
-                                    let val = row.getCell(c).value;
-                                    if(val && typeof val === 'object') {
-                                        if(val.result !== undefined) val = val.result;
-                                        else if(val.richText) val = val.richText.map(rt => rt.text).join('');
-                                    }
-                                    rowData.push(val);
-                                });
-                            }
-                        }
-                        
+                            rowData.push(val);
+                        });
+
                         allData[p_key][mode].push({ data: rowData, row: rowNumber });
                     } else {
                         gapCount++;
                     }
                     previousRowNumber = rowNumber;
-                });
+                }
             };
 
             processSheet("PFMEA", 33, 3, "FMEA");
