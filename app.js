@@ -175,12 +175,28 @@ function setupWorkcell(modePrefix) {
         logMessage(`--- ${modePrefix.toUpperCase()} SESSION STARTED ---`, "info");
         
         try {
+            logMessage("Reading source workbook...", "info");
             const srcBuffer = await srcFile.files[0].arrayBuffer();
-            const fmeaBuffer = await fmeaFile.files[0].arrayBuffer();
-            const pcpBuffer = await pcpFile.files[0].arrayBuffer();
+            logMessage(`Source file loaded: ${(srcBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`, "info");
             
+            logMessage("Reading FMEA template...", "info");
+            const fmeaBuffer = await fmeaFile.files[0].arrayBuffer();
+            logMessage(`FMEA template loaded: ${(fmeaBuffer.byteLength / 1024).toFixed(0)} KB`, "info");
+            
+            logMessage("Reading PCP template...", "info");
+            const pcpBuffer = await pcpFile.files[0].arrayBuffer();
+            logMessage(`PCP template loaded: ${(pcpBuffer.byteLength / 1024).toFixed(0)} KB`, "info");
+            
+            // Yield to browser so log messages render before heavy parsing starts
+            await new Promise(r => setTimeout(r, 50));
+            
+            logMessage("Parsing source workbook (this may take a moment for large files)...", "info");
             const wb = new ExcelJS.Workbook();
             await wb.xlsx.load(srcBuffer);
+            logMessage("Source workbook parsed successfully.", "success");
+            
+            // Yield again so user sees the success message
+            await new Promise(r => setTimeout(r, 50));
             
             const allData = {};
             let hasGapError = false;
