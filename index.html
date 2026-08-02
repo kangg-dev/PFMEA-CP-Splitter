@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PFMEA-CP SPLITTER BY PROCESS (v1.1.0)</title>
+    <title>PFMEA-CP SPLITTER BY PROCESS (v1.1.2)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -155,7 +155,7 @@
         <footer>
             <div class="footer-content">
                 <div class="footer-primary">
-                    <span class="version-text">PFMEA-CP SPLITTER BY PROCESS (v1.1.0)</span>
+                    <span class="version-text">PFMEA-CP SPLITTER BY PROCESS (v1.1.2)</span>
                     <button id="releaseNotesBtn" class="link-btn" data-lang="release_notes">Release Notes</button>
                 </div>
                 <div class="footer-secondary">
@@ -175,6 +175,13 @@
                 <button id="closeModalBtn" class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="release-item">
+                    <div class="release-version">v1.1.2</div>
+                    <div class="release-date">August 03, 2026</div>
+                    <ul class="release-changes">
+                        <li>Hotfix: Refactored data scanning logic (Single-pass loop) to permanently resolve memory leak and browser freeze issues when uploading large or improperly formatted Excel files.</li>
+                    </ul>
+                </div>
                 <div class="release-item">
                     <div class="release-version">v1.1.0</div>
                     <div class="release-date">August 03, 2026</div>
