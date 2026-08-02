@@ -187,68 +187,71 @@ function setupWorkcell(modePrefix) {
             const pcpBuffer = await pcpFile.files[0].arrayBuffer();
             logMessage(`PCP template loaded: ${(pcpBuffer.byteLength / 1024).toFixed(0)} KB`, "info");
             
-            // Yield to browser so log messages render before heavy parsing starts
+            // Yield to browser so log messages render before parsing
             await new Promise(r => setTimeout(r, 50));
             
-            logMessage("Parsing source workbook (this may take a moment for large files)...", "info");
-            const wb = new ExcelJS.Workbook();
-            await wb.xlsx.load(srcBuffer);
+            // Use SheetJS for READING source (10-50x faster than ExcelJS for large files)
+            logMessage("Parsing source workbook...", "info");
+            const srcWb = XLSX.read(new Uint8Array(srcBuffer), { type: 'array' });
             logMessage("Source workbook parsed successfully.", "success");
             
-            // Yield again so user sees the success message
             await new Promise(r => setTimeout(r, 50));
             
             const allData = {};
             let hasGapError = false;
 
             const processSheet = (sheetName, startRow, colIdx, mode) => {
-                const ws = wb.getWorksheet(sheetName);
+                const ws = srcWb.Sheets[sheetName];
                 if (!ws) {
                     logMessage(`Sheet ${sheetName} not found!`, "error");
                     return;
                 }
                 logMessage(`Scanning ${sheetName} sheet...`, "info");
 
-                // STEP 1: Collect only rows that actually exist in the file (eachRow skips
-                // phantom rows created by stray formatting). Filter to data region only.
-                const existingRows = [];
-                ws.eachRow((row, rowNumber) => {
-                    if (rowNumber >= startRow) existingRows.push({ row, rowNumber });
-                });
+                // Convert sheet to 2D array (0-indexed rows and cols)
+                const sheetData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+                
+                // colIdx is 1-indexed (Excel style), convert to 0-indexed
+                const processCol = colIdx - 1;
 
-                // STEP 2: Find the true last data row (last row where process col is non-empty)
-                let lastDataIdx = -1;
-                for (let i = existingRows.length - 1; i >= 0; i--) {
-                    const val = existingRows[i].row.getCell(colIdx).value;
-                    if (val !== null && val !== undefined && String(val).trim() !== "") {
-                        lastDataIdx = i;
-                        break;
+                // Find last row with process data
+                let lastDataRow = -1;
+                for (let i = sheetData.length - 1; i >= startRow - 1; i--) {
+                    const rowArr = sheetData[i];
+                    if (rowArr) {
+                        const val = rowArr[processCol];
+                        if (val !== null && val !== undefined && String(val).trim() !== "") {
+                            lastDataRow = i;
+                            break;
+                        }
                     }
                 }
 
-                if (lastDataIdx === -1) {
+                if (lastDataRow === -1) {
                     logMessage(`No data found in sheet ${sheetName} from row ${startRow}.`, "warn");
                     return;
                 }
 
-                // STEP 3: Only iterate rows up to and including the last data row
-                const dataRegion = existingRows.slice(0, lastDataIdx + 1);
-
                 let gapCount = 0;
-                let previousRowNumber = startRow - 1;
 
-                for (const { row, rowNumber } of dataRegion) {
+                // Columns to extract (1-indexed as defined in BRD)
+                const colsToExtract = modePrefix === "general"
+                    ? (mode === "FMEA"
+                        ? [6,7,8,9,10,11,12,13,14,15,16,17]
+                        : [5,6,7,8,9,10,11,12,13,14,15,16])
+                    : (mode === "FMEA"
+                        ? [4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+                        : [3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+
+                for (let i = startRow - 1; i <= lastDataRow; i++) {
                     if (hasGapError) break;
 
-                    // Count implicit empty rows between consecutive existing rows
-                    const implicitGap = (rowNumber - previousRowNumber - 1);
-                    gapCount += implicitGap;
-
-                    const p = row.getCell(colIdx).value;
+                    const rowArr = sheetData[i] || [];
+                    const p = rowArr[processCol];
 
                     if (p !== null && p !== undefined && String(p).trim() !== "") {
                         if (gapCount > 15) {
-                            logMessage(`Detected too many empty rows between data rows (Data is not continuous) near row ${rowNumber}`, "error");
+                            logMessage(`Detected too many empty rows between data rows (Data is not continuous) near row ${i + 1}`, "error");
                             hasGapError = true;
                             break;
                         }
@@ -257,28 +260,17 @@ function setupWorkcell(modePrefix) {
                         if (!allData[p_key]) allData[p_key] = { FMEA: [], PCP: [] };
 
                         const rowData = [];
-                        const colsToExtract = modePrefix === "general"
-                            ? (mode === "FMEA"
-                                ? [6,7,8,9,10,11,12,13,14,15,16,17]
-                                : [5,6,7,8,9,10,11,12,13,14,15,16])
-                            : (mode === "FMEA"
-                                ? [4,5,6,7,8,9,10,11,12,13,14,15,16,17]
-                                : [3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
-
                         colsToExtract.forEach(c => {
-                            let val = row.getCell(c).value;
-                            if (val && typeof val === 'object') {
-                                if (val.result !== undefined) val = val.result;
-                                else if (val.richText) val = val.richText.map(rt => rt.text).join('');
-                            }
+                            // Convert 1-indexed col to 0-indexed for array access
+                            let val = rowArr[c - 1];
+                            if (val === undefined) val = null;
                             rowData.push(val);
                         });
 
-                        allData[p_key][mode].push({ data: rowData, row: rowNumber });
+                        allData[p_key][mode].push({ data: rowData, row: i + 1 });
                     } else {
                         gapCount++;
                     }
-                    previousRowNumber = rowNumber;
                 }
             };
 
