@@ -204,7 +204,7 @@ function setupWorkcell(modePrefix) {
 
                 let gapCount = 0;
                 
-                for (let r = startRow; r <= Math.max(ws.rowCount, lastDataRow); r++) {
+                for (let r = startRow; r <= lastDataRow; r++) {
                     const row = ws.getRow(r);
                     const p = row.getCell(colIndexReal).value;
                     
@@ -257,7 +257,7 @@ function setupWorkcell(modePrefix) {
                         
                         allData[p_key][mode].push({ data: rowData, row: r });
                     } else {
-                        if (r < lastDataRow) gapCount++;
+                        gapCount++;
                     }
                 }
             };
