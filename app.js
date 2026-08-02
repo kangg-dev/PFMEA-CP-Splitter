@@ -194,25 +194,22 @@ function setupWorkcell(modePrefix) {
                 logMessage(`Scanning ${sheetName} sheet...`, "info");
                 
                 const colIndexReal = colIdx; 
-                let lastDataRow = 0;
-                ws.eachRow((row, rowNumber) => {
-                    if(rowNumber >= startRow) {
-                        const p = row.getCell(colIndexReal).value;
-                        if(p) lastDataRow = rowNumber;
-                    }
-                });
-
                 let gapCount = 0;
+                let previousRowNumber = startRow - 1;
                 
-                for (let r = startRow; r <= lastDataRow; r++) {
-                    const row = ws.getRow(r);
+                ws.eachRow((row, rowNumber) => {
+                    if (hasGapError) return;
+                    if (rowNumber < startRow) return;
+                    
+                    gapCount += (rowNumber - previousRowNumber - 1);
+                    
                     const p = row.getCell(colIndexReal).value;
                     
                     if (p) {
                         if (gapCount > 15) {
-                            logMessage(`Detected too many empty rows between data rows (Data is not continuous) at row ${r}`, "error");
+                            logMessage(`Detected too many empty rows between data rows (Data is not continuous) near row ${rowNumber}`, "error");
                             hasGapError = true;
-                            break;
+                            return;
                         }
                         gapCount = 0;
                         const p_key = String(p).trim();
@@ -231,7 +228,6 @@ function setupWorkcell(modePrefix) {
                             }
                         } else if (modePrefix === "zebra") {
                             if (mode === "FMEA") {
-                                // Extract D(4), E(5), and F-Q (6-17)
                                 const colsToExtract = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
                                 colsToExtract.forEach(c => {
                                     let val = row.getCell(c).value;
@@ -242,7 +238,6 @@ function setupWorkcell(modePrefix) {
                                     rowData.push(val);
                                 });
                             } else if (mode === "PCP") {
-                                // Extract C(3), D(4), and E-P (5-16)
                                 const colsToExtract = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
                                 colsToExtract.forEach(c => {
                                     let val = row.getCell(c).value;
@@ -255,11 +250,12 @@ function setupWorkcell(modePrefix) {
                             }
                         }
                         
-                        allData[p_key][mode].push({ data: rowData, row: r });
+                        allData[p_key][mode].push({ data: rowData, row: rowNumber });
                     } else {
                         gapCount++;
                     }
-                }
+                    previousRowNumber = rowNumber;
+                });
             };
 
             processSheet("PFMEA", 33, 3, "FMEA");
