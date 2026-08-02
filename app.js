@@ -337,24 +337,32 @@ function setupWorkcell(modePrefix) {
             
             const keys = Object.keys(allData);
             let processed = 0;
+            const numCols = modePrefix === "zebra" ? 14 : 12;
+
+            // Load each template ONCE (avoid re-parsing 1MB template for every process)
+            logMessage("Loading templates...", "info");
+            const fmeaWb = new ExcelJS.Workbook();
+            await fmeaWb.xlsx.load(fmeaBuffer);
+            const fmeaSt = fmeaWb.worksheets[0];
+
+            const pcpWb = new ExcelJS.Workbook();
+            await pcpWb.xlsx.load(pcpBuffer);
+            const pcpSt = pcpWb.worksheets[0];
 
             for (const processName of keys) {
-                // Yield to the browser to update UI (progress bar) and prevent "Page Unresponsive" popup
-                await new Promise(resolve => setTimeout(resolve, 20));
+                // Yield to browser to update UI and prevent "Page Unresponsive"
+                await new Promise(resolve => setTimeout(resolve, 10));
                 
                 const content = allData[processName];
                 const safeName = processName.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
                 const processFolder = zip.folder(safeName);
-                
-                for (const {t_type, buffer, items} of [
-                    {t_type: 'FMEA', buffer: fmeaBuffer, items: content.FMEA},
-                    {t_type: 'PCP', buffer: pcpBuffer, items: content.PCP}
+
+                for (const { t_type, st, items } of [
+                    { t_type: 'FMEA', st: fmeaSt, items: content.FMEA },
+                    { t_type: 'PCP', st: pcpSt, items: content.PCP }
                 ]) {
                     if (items && items.length > 0) {
-                        const twb = new ExcelJS.Workbook();
-                        await twb.xlsx.load(buffer);
-                        const st = twb.worksheets[0];
-                        
+                        // Write data into the pre-loaded template
                         items.forEach((item, rowOffset) => {
                             const targetRow = 2 + rowOffset;
                             
@@ -364,28 +372,34 @@ function setupWorkcell(modePrefix) {
                                 });
                             } else if (modePrefix === "zebra") {
                                 if (t_type === "FMEA") {
-                                    // F->A(1), D->B(2), E->C(3), G..Q -> D..N(4..14)
-                                    // items.data indices: 0(D), 1(E), 2(F), 3(G)...
                                     st.getCell(targetRow, 1).value = item.data[2]; // F -> A
                                     st.getCell(targetRow, 2).value = item.data[0]; // D -> B
                                     st.getCell(targetRow, 3).value = item.data[1]; // E -> C
-                                    for(let j=3; j<14; j++) {
-                                        st.getCell(targetRow, j+1).value = item.data[j]; // G..Q -> D..N
+                                    for (let j = 3; j < 14; j++) {
+                                        st.getCell(targetRow, j + 1).value = item.data[j];
                                     }
                                 } else if (t_type === "PCP") {
-                                    // C->A(1), D->B(2), E..P -> C..N(3..14)
-                                    // items.data indices: 0(C), 1(D), 2(E), 3(F)...
                                     st.getCell(targetRow, 1).value = item.data[0]; // C -> A
                                     st.getCell(targetRow, 2).value = item.data[1]; // D -> B
-                                    for(let j=2; j<14; j++) {
-                                        st.getCell(targetRow, j+1).value = item.data[j]; // E..P -> C..N
+                                    for (let j = 2; j < 14; j++) {
+                                        st.getCell(targetRow, j + 1).value = item.data[j];
                                     }
                                 }
                             }
                         });
                         
-                        const outBuffer = await twb.xlsx.writeBuffer();
+                        // Export to buffer and add to ZIP
+                        const wb = t_type === 'FMEA' ? fmeaWb : pcpWb;
+                        const outBuffer = await wb.xlsx.writeBuffer();
                         processFolder.file(`${safeName}_${t_type}.xlsx`, outBuffer);
+                        
+                        // Clear written cells so template is clean for the next process
+                        items.forEach((item, rowOffset) => {
+                            const targetRow = 2 + rowOffset;
+                            for (let c = 1; c <= numCols; c++) {
+                                st.getCell(targetRow, c).value = null;
+                            }
+                        });
                     }
                 }
                 processed++;
