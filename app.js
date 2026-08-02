@@ -339,6 +339,9 @@ function setupWorkcell(modePrefix) {
             let processed = 0;
 
             for (const processName of keys) {
+                // Yield to the browser to update UI (progress bar) and prevent "Page Unresponsive" popup
+                await new Promise(resolve => setTimeout(resolve, 20));
+                
                 const content = allData[processName];
                 const safeName = processName.replace(/[^a-zA-Z0-9 _-]/g, '').trim();
                 const processFolder = zip.folder(safeName);
