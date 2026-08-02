@@ -1,0 +1,192 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset='utf-8'>
+<title>TECHNICAL SPECIFICATION & BRD - PFMEA-CP SPLITTER v1.0.0</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #2c3e50; max-width: 1400px; margin: 0 auto; padding: 30px; background-color: #fcfcfc;}
+h1 { color: #2980b9; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 15px; text-transform: uppercase; font-size: 2.2em;}
+h2 { color: #16a085; border-bottom: 2px solid #bdc3c7; padding-bottom: 8px; margin-top: 40px; font-size: 1.6em;}
+h3 { color: #d35400; margin-top: 30px; font-size: 1.3em;}
+h4 { color: #8e44ad; }
+.highlight { font-weight: bold; color: #c0392b; }
+.code-block { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 14px; overflow-x: auto; margin: 15px 0;}
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); background: white;}
+th, td { border: 1px solid #dfe6e9; padding: 12px 15px; text-align: left; }
+th { background-color: #34495e; color: white; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;}
+tr:nth-child(even) { background-color: #f8f9fa; }
+tr:hover { background-color: #f1f2f6; }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; color: white;}
+.badge-info { background-color: #3498db; }
+.badge-success { background-color: #2ecc71; }
+.badge-warn { background-color: #f39c12; }
+.badge-error { background-color: #e74c3c; }
+.flowchart-container { background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin: 20px 0; text-align: center;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true, theme: 'default'});</script>
+</head>
+<body>
+
+<h1>DETAILED SOFTWARE REQUIREMENT SPECIFICATION (SRS)</h1>
+<h2>Project: PFMEA-CP SPLITTER BY PROCESS (v1.0.0)</h2>
+<p><strong>Document Level:</strong> Deep-dive Technical Blueprint (Legacy Version)</p>
+<p>Tài liệu này là bản thiết kế kỹ thuật cấp thấp của phiên bản 1.0.0 (Bản gốc, chỉ hỗ trợ General Workcell). Dùng làm cơ sở lưu trữ lịch sử thuật toán sơ khai, bao gồm Flowchart và cấu trúc code sử dụng thư viện thuần ExcelJS.</p>
+<hr>
+
+<h2>I. SYSTEM ARCHITECTURE & DATA FLOW</h2>
+
+<h3>1. Sơ đồ Luồng Thực thi (Execution Flowchart)</h3>
+<div class="flowchart-container">
+<div class="mermaid">
+graph TD
+    A([User Clicks EXECUTION]) --> B{Are 3 files selected?}
+    B -- No --> C[Button Disabled]
+    B -- Yes --> D[Read 3 files to ArrayBuffer]
+    D --> E[ExcelJS: Parse Source.xlsx to Workbook]
+    E --> F[Iterate over PFMEA & PCP Sheets via ws.eachRow]
+    F --> G[Extract 12 Cols F-Q / E-P]
+    G --> H[Group Data by Process Name in Dictionary]
+    H --> I[Execute Cross-check Validation]
+    I -- Mismatch / Empty --> J[Log ERROR & Remove Process]
+    I -- Pass --> K[Iterate Valid Processes]
+    K --> L[ExcelJS: Load FMEA & PCP Template Buffers EACH LOOP]
+    L --> M[Write Data to Template cells]
+    M --> N[Add generated File to JSZip]
+    N --> K
+    K -- Loop Ends --> O[Generate Log.txt]
+    O --> P[Trigger FileSaver.js to download Report.zip]
+    P --> Q([End Process])
+</div>
+</div>
+
+<h3>2. Tech Stack & Dependencies Cụ thể</h3>
+<ul>
+    <li><strong>UI Framework:</strong> Pure HTML5 & CSS3.</li>
+    <li><strong>DOM Logic:</strong> Vanilla JS (app.js). Kiến trúc đơn giản, chia thành 2 phần: UI Interaction và File Processing.</li>
+    <li><strong>ExcelJS (v4.3.0):</strong> Đóng vai trò là Core Engine độc quyền. Dùng để <strong>ĐỌC</strong> Source File (bằng <code>wb.xlsx.load(srcBuffer)</code>) và <strong>GHI</strong> Template File trong cùng một vòng lặp.</li>
+    <li><strong>JSZip (v3.10.1) & FileSaver.js (v2.0.5):</strong> Xử lý đóng gói bộ file xuất ra thành định dạng .zip và kích hoạt tải về.</li>
+</ul>
+
+<h2>II. UI/UX & DOM STRUCTURE (CẤU TRÚC GIAO DIỆN)</h2>
+
+<h3>1. DOM Architecture</h3>
+<p>Cấu trúc HTML phiên bản 1.0.0 cực kỳ gọn nhẹ do không có Tabs. Giao diện được chia trực tiếp thành 2 Card trong <code>&lt;main&gt;</code>:</p>
+<div class="code-block">
+&lt;div class="app-container"&gt;<br>
+  &lt;header&gt;<br>
+    - Logo + Title<br>
+    - Theme/Language Toggle<br>
+  &lt;/header&gt;<br>
+  &lt;main&gt;<br>
+    &lt;div class="card"&gt;<br>
+      - 3 File Inputs (Source, FMEA Template, PCP Template)<br>
+      - Button EXECUTION<br>
+    &lt;/div&gt;<br>
+    &lt;div class="card terminal-card"&gt;<br>
+      - &lt;div id="consoleOutput"&gt;&lt;/div&gt; (Hiển thị Log)<br>
+      - &lt;div id="progressBar"&gt;&lt;/div&gt; (Hiển thị Tiến độ)<br>
+    &lt;/div&gt;<br>
+  &lt;/main&gt;<br>
+&lt;/div&gt;
+</div>
+
+<h3>2. CSS Styling & Animations</h3>
+<ul>
+    <li><strong>CSS Variables:</strong> Sử dụng <code>:root</code> cho Light mode và <code>[data-theme="dark"]</code> cho Dark mode. Màu nhấn (Primary) là xanh dương.</li>
+    <li><strong>Console Animations:</strong> Auto-scroll xuống cuối bằng JS (<code>scrollTop = scrollHeight</code>). Các dòng log có class riêng biệt (<code>.info</code> màu xanh dương, <code>.error</code> màu đỏ) để dễ dàng nhận biết.</li>
+</ul>
+
+<h2>III. DATA STRUCTURE & ALGORITHMS (CẤU TRÚC DỮ LIỆU & THUẬT TOÁN)</h2>
+
+<h3>1. Cấu trúc Từ điển Dữ liệu (Dictionary Structure)</h3>
+<div class="code-block">
+let allData = {<br>
+  "Process_A_Name": {<br>
+    FMEA: [<br>
+      { data: ["val1", "val2", ...12_cols], row: 33 },<br>
+      { data: ["val1", "val2", ...12_cols], row: 34 }<br>
+    ],<br>
+    PCP: [<br>
+      { data: ["val1", "val2", ...12_cols], row: 30 }<br>
+    ]<br>
+  }<br>
+};
+</div>
+
+<h3>2. Thuật toán Quét & Bắt lỗi ngắt quãng (Legacy ws.eachRow)</h3>
+<p>Thuật toán quét dòng phiên bản 1.0.0 chạy tuần tự từ trên xuống dưới sử dụng hàm có sẵn của ExcelJS:</p>
+<div class="code-block">
+let gapCount = 0;<br>
+ws.eachRow({ includeEmpty: true }, (row, rowNumber) =&gt; {<br>
+  if (rowNumber &lt; startRow) return;<br>
+<br>
+  const p = row.getCell(processCol).value;<br>
+  if (p !== null && p !== '') {<br>
+    if (gapCount &gt; 15) {<br>
+      THROW GAP_ERROR;<br>
+    }<br>
+    gapCount = 0;<br>
+    // Extract 12 columns logic here...<br>
+  } else {<br>
+    gapCount++;<br>
+  }<br>
+});
+</div>
+<p><em>Nhược điểm của thuật toán này (đã được fix ở v1.1.0):</em> Nếu file có hàng ngàn dòng bị format nhưng trống rỗng (Phantom rows), <code>eachRow</code> vẫn sẽ duyệt qua và tăng <code>gapCount</code> dẫn tới việc ném lỗi sai.</p>
+
+<h3>3. Chi tiết Ánh xạ Cột (Column Index Mapping)</h3>
+<p>General Workcell yêu cầu 12 cột. ExcelJS sử dụng hệ 1-indexed (Cột A = 1).</p>
+<table>
+    <tr>
+        <th>Tiêu chí</th>
+        <th>Chỉ số Cột trong ExcelJS (1-indexed)</th>
+    </tr>
+    <tr>
+        <td><strong>FMEA Process Name Column</strong></td>
+        <td>Cột C (Index 3)</td>
+    </tr>
+    <tr>
+        <td><strong>PCP Process Name Column</strong></td>
+        <td>Cột B (Index 2)</td>
+    </tr>
+    <tr>
+        <td><strong>FMEA Data Columns</strong></td>
+        <td>Từ cột F tới Q (Index 6 to 17)</td>
+    </tr>
+    <tr>
+        <td><strong>PCP Data Columns</strong></td>
+        <td>Từ cột E tới P (Index 5 to 16)</td>
+    </tr>
+    <tr>
+        <td><strong>Template Paste Location</strong></td>
+        <td>Bắt đầu từ Dòng 2, Cột A (Index 1) tới L (Index 12).</td>
+    </tr>
+</table>
+
+<h2>IV. CROSS-CHECK VALIDATION LOGIC (LOGIC KIỂM TRA CHÉO)</h2>
+<p>Mã giả xử lý kiểm tra sự đồng nhất dữ liệu giữa 2 sheet:</p>
+<div class="code-block">
+function validate(processName, fmeaData, pcpData):<br>
+  if fmeaData.length !== pcpData.length: RETURN ERROR<br>
+<br>
+  for i from 0 to fmeaData.length:<br>
+    if fmeaData[i] contains NULL or pcpData[i] contains NULL: RETURN ERROR<br>
+<br>
+    // Data Matching cho 4 cặp 12-cột gốc<br>
+    // Cặp 1: FMEA[0] vs PCP[0]<br>
+    // Cặp 2: FMEA[1] vs PCP[1]<br>
+    // Cặp 3: FMEA[2] vs PCP[2]<br>
+    // Cặp 4: FMEA[6] vs PCP[4]<br>
+    <br>
+    if valF !== valP:<br>
+      if clean(valF) == clean(valP): LOG WARNING<br>
+      else: RETURN ERROR<br>
+<br>
+  RETURN PASS<br>
+</div>
+
+<h2>V. OUTPUT GENERATION (Legacy Mode)</h2>
+<p>Trong v1.0.0, mỗi Process cần xuất, vòng lặp <code>for</code> sẽ thực hiện hàm <code>new ExcelJS.Workbook().xlsx.load(fmeaBuffer)</code>. Quá trình này sẽ tốn chi phí RAM và CPU do phải Parse lại XML từ Buffer đối với mỗi file được xuất ra. (Đây là tài liệu ghi chú trạng thái kỹ thuật của phiên bản 1.0.0, vấn đề này đã được thay đổi cấu trúc ở phiên bản tiếp theo).</p>
+
+</body>
+</html>

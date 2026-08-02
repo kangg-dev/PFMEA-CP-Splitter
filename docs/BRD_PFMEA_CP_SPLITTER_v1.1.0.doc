@@ -1,191 +1,212 @@
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
 <meta charset='utf-8'>
-<title>COMPREHENSIVE BRD - PFMEA-CP SPLITTER v1.1.0</title>
+<title>BRD - PFMEA-CP SPLITTER v1.1.0</title>
 <style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px;}
-h1 { color: #1a5276; text-align: center; border-bottom: 3px solid #2980b9; padding-bottom: 10px; text-transform: uppercase;}
-h2 { color: #2980b9; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px; margin-top: 30px;}
-h3 { color: #d35400; margin-top: 25px;}
-h4 { color: #8e44ad; }
-.highlight { font-weight: bold; color: #e74c3c; }
-.code-block { background: #f4f6f7; padding: 10px; border-left: 4px solid #3498db; font-family: monospace; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-th, td { border: 1px solid #bdc3c7; padding: 12px; text-align: left; }
-th { background-color: #34495e; color: white; }
-tr:nth-child(even) { background-color: #f9f9f9; }
-.badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white;}
-.badge-info { background-color: #3498db; }
-.badge-success { background-color: #2ecc71; }
-.badge-warn { background-color: #f39c12; }
-.badge-error { background-color: #e74c3c; }
+body { font-family: Arial, sans-serif; line-height: 1.5; }
+h1, h2, h3, h4 { color: #2c3e50; }
+.highlight { font-weight: bold; color: #d35400; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+th, td { border: 1px solid #bdc3c7; padding: 8px; text-align: left; }
+th { background-color: #f8f9fa; }
 </style>
 </head>
 <body>
 
-<h1>SOFTWARE REQUIREMENT SPECIFICATION (SRS) & BRD</h1>
-<h2>Project: PFMEA-CP SPLITTER BY PROCESS (GENERAL & ZEBRA WORKCELL)</h2>
+<h1>BUSINESS REQUIREMENT DOCUMENT (BRD)</h1>
+<h2>Project: PFMEA-CP SPLITTER BY PROCESS (GENERAL & Zebra WORKCELL)</h2>
 <p><strong>Version:</strong> 1.1.0</p>
-<p><strong>Document Purpose:</strong> Tài liệu này cung cấp toàn bộ đặc tả kiến trúc, thuật toán, UI/UX và logic nghiệp vụ. Bất kỳ lập trình viên nào dựa vào tài liệu này đều có thể code lại từ đầu (re-implement) toàn bộ hệ thống 100% chính xác.</p>
 <hr>
 
-<h2>I. SYSTEM ARCHITECTURE & DEPENDENCIES (KIẾN TRÚC HỆ THỐNG)</h2>
-<ul>
-    <li><strong>Mô hình:</strong> 100% Client-side Web Application (Hoạt động hoàn toàn trên trình duyệt, không có Backend). Đảm bảo bảo mật dữ liệu tuyệt đối (Zero data upload).</li>
-    <li><strong>Core Technology:</strong> HTML5, Vanilla CSS, Vanilla JavaScript (ES6+).</li>
-    <li><strong>Thư viện bên thứ ba (CDN):</strong>
-        <ul>
-            <li><code>SheetJS (xlsx.full.min.js)</code>: Sử dụng độc quyền cho việc <strong>ĐỌC</strong> source workbook (Tốc độ parse nhị phân cực nhanh, gấp 50x so với ExcelJS, chống treo trình duyệt với file >5MB).</li>
-            <li><code>ExcelJS</code>: Sử dụng độc quyền cho việc <strong>GHI</strong> dữ liệu vào Template (Vì có khả năng giữ nguyên định dạng, công thức, style của file Excel mẫu).</li>
-            <li><code>JSZip</code>: Tạo file nén (Zip) chứa hàng loạt các file Excel sau khi xuất.</li>
-            <li><code>FileSaver.js</code>: Kích hoạt tải file Zip về máy người dùng.</li>
-        </ul>
-    </li>
-</ul>
+<h2>I. YÊU CẦU CHỨC NĂNG WEB APP</h2>
 
-<h2>II. UI/UX DESIGN SYSTEM & INTERACTION (THIẾT KẾ GIAO DIỆN)</h2>
-<h3>1. Cấu trúc Layout (Split Layout)</h3>
-<p>Giao diện được chia thành 2 phần chính (Card-based layout) sử dụng CSS Flexbox/Grid:</p>
-<ul>
-    <li><strong>Upload Panel (Trái/Trên):</strong> Khu vực chọn file. Thiết kế dạng custom file input, ẩn thẻ input mặc định, dùng nút "Browse" và icon hiển thị tên file. Nút <strong>EXECUTION</strong> to, có icon SVG, bị disable cho đến khi chọn đủ 3 file.</li>
-    <li><strong>Terminal Console (Phải/Dưới):</strong> Khu vực hiển thị log hệ thống theo thời gian thực mô phỏng màn hình Terminal của Developer. Có tiêu đề với 3 dấu chấm tròn mô phỏng cửa sổ MacOS. Thanh Scrollbar tự động trượt xuống dòng log mới nhất. Dưới cùng là thanh <strong>Progress Bar</strong> hiển thị tiến độ xuất file.</li>
-</ul>
-
-<h3>2. Theme & Styling (Màu sắc & Chủ đề)</h3>
-<ul>
-    <li><strong>Bảng màu cốt lõi:</strong> Trắng (Background), Xanh biển (Primary - Nút bấm), Xám nhạt (Border).</li>
-    <li><strong>Dark Mode (Chế độ tối):</strong> 
-        <ul>
-            <li>Kích hoạt thông qua Icon Mặt trăng/Mặt trời ở Header.</li>
-            <li>Logic: Sử dụng CSS Variables (<code>--bg-color</code>, <code>--text-color</code>) và thuộc tính <code>data-theme="dark"</code> trên thẻ <code>&lt;html&gt;</code>. Khi chuyển sang Dark mode, nền đổi thành đen mờ (dark slate), chữ đổi thành trắng/xám để chống mỏi mắt.</li>
-        </ul>
-    </li>
-    <li><strong>Màu sắc Terminal Logs:</strong> 
-        <span class="badge badge-info">INFO (Xanh dương)</span> | 
-        <span class="badge badge-success">SUCCESS (Xanh lá)</span> | 
-        <span class="badge badge-warn">WARNING (Vàng cam)</span> | 
-        <span class="badge badge-error">ERROR (Đỏ)</span>
-    </li>
-</ul>
-
-<h3>3. Đa ngôn ngữ (i18n)</h3>
-<p>Nút Toggle (EN/VN) trên Header. Các element chữ trong HTML được gắn thuộc tính <code>data-lang="key"</code>. Một dictionary Object trong JS chứa mapping cho tiếng Việt và tiếng Anh. Khi đổi ngôn ngữ, lặp qua tất cả <code>[data-lang]</code> và thay đổi <code>innerText</code> tương ứng.</p>
-
-<h3>4. Tabs Navigation</h3>
-<p>Hệ thống có 2 Tab: <strong>General Workcell</strong> và <strong>Zebra Workcell</strong>. Khi click chuyển tab, sẽ ẩn/hiện DOM tương ứng (pane_general và pane_zebra) và giữ độc lập các file input của từng mode.</p>
-
-<h2>III. CORE BUSINESS LOGIC & DATA PROCESSING (LOGIC CỐT LÕI)</h2>
-
-<h3>1. Template Memory Management (Tối ưu Bộ nhớ - Quan trọng)</h3>
-<p>Để ngăn chặn trình duyệt bị Crash (Out of Memory) khi xử lý hàng trăm Process, thuật toán phải tuân thủ chuẩn sau:</p>
-<div class="code-block">
-1. Dùng ArrayBuffer để nạp 3 file gốc lên RAM.<br>
-2. SheetJS đọc SourceBuffer (Tạo ra mảng 2D siêu tốc).<br>
-3. ExcelJS nạp FMEA Buffer và PCP Buffer đúng 1 lần DUY NHẤT (Pre-load).<br>
-4. Vòng lặp xuất file:<br>
-   - Lấy FMEA Workbook đã load ở bước 3.<br>
-   - Ghi dữ liệu của Process hiện tại vào.<br>
-   - Lưu (writeBuffer) vào JSZip.<br>
-   - CLEAR TOÀN BỘ CÁC Ô ĐÃ GHI (gán value = null) để đưa Template về trạng thái ban đầu.<br>
-   - Tái sử dụng cho Process tiếp theo. DO NOT `wb.xlsx.load()` bên trong vòng lặp.
-</div>
-
-<h3>2. Continuous Data Algorithm (Thuật toán quét dòng ngắt quãng)</h3>
-<p>Thay vì sử dụng hàm quét từng dòng tới cuối file (vốn sẽ quét luôn hàng ngàn dòng rỗng do rác định dạng Excel), phải dùng thuật toán sau:</p>
-<ul>
-    <li>Chuyển toàn bộ Sheet thành mảng 2D <code>sheetData</code>.</li>
-    <li>Duyệt ngược từ dưới lên (từ cuối mảng) để tìm phần tử đầu tiên (dòng) có chứa dữ liệu thực tại cột Process (Cột C hoặc B). Đây là <code>lastDataRow</code>.</li>
-    <li>Duyệt từ dòng bắt đầu tới <code>lastDataRow</code>. Nếu liên tục có dòng rỗng (Process = null) lớn hơn <strong>15 dòng</strong>, lập tức kích hoạt lỗi <strong>Gap Error</strong>, ghi log: "Detected too many empty rows..." và DỪNG HỆ THỐNG. (Giúp phát hiện user lỡ tay xóa một khối dữ liệu ở giữa).</li>
-</ul>
-
-<h3>3. Data Mapping Rules (Quy tắc Ánh xạ)</h3>
+<h3>1. Input Requirements (Quản lý Đầu vào)</h3>
+<p>Web App bao gồm 2 Tab hoạt động độc lập: <strong>General Workcell</strong> và <strong>Zebra Workcell</strong>.</p>
 <table>
     <tr>
-        <th>Tiêu chí</th>
+        <th>#</th>
+        <th>Input Element</th>
+        <th>Mode</th>
+        <th>Format</th>
+        <th>Mandatory</th>
+        <th>Description & Constraints</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td><strong>Source Workbook</strong></td>
+        <td>General</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>Dữ liệu gốc chứa sheet PFMEA (quét từ cột F) và PCP (quét từ cột E).</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><strong>FMEA Template</strong></td>
+        <td>General</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>FMEA Template chuẩn.</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><strong>PCP Template</strong></td>
+        <td>General</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>PCP Template chuẩn.</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td><strong>Source Workbook (Zebra)</strong></td>
+        <td>Zebra</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>File gốc Zebra. 12 cột giữ nguyên, bổ sung thêm 2 cột ẩn: D, E (PFMEA) và C, D (PCP).</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td><strong>FMEA Template Micro (Zebra)</strong></td>
+        <td>Zebra</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>Template bị chèn thêm 2 cột ở vị trí B và C.</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td><strong>PCP Template Micro (Zebra)</strong></td>
+        <td>Zebra</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>Template bị chèn thêm 2 cột ở vị trí A và B.</td>
+    </tr>
+</table>
+
+<h3>2. Data Reading & Output Mapping (Đọc và Ánh xạ dữ liệu)</h3>
+
+<h4>2.1. General Workcell (Chế độ cũ)</h4>
+<ul>
+    <li><strong>Quét dữ liệu:</strong> PFMEA quét 12 cột từ cột F; PCP quét 12 cột từ cột E. Tên Process nằm ở cột C (PFMEA) và B (PCP). Bắt buộc dữ liệu liên tục.</li>
+    <li><strong>Output Mapping:</strong> Đổ thẳng 12 cột vào Template bắt đầu từ cột A.</li>
+</ul>
+
+<h4>2.2. Zebra Workcell (Chế độ mới)</h4>
+<ul>
+    <li><strong>Quét dữ liệu PFMEA (14 cột):</strong> Đọc 2 cột mới (D, E) và 12 cột cũ (F đến Q). Tên Process nằm ở cột C.</li>
+    <li><strong>Quét dữ liệu PCP (14 cột):</strong> Đọc 2 cột mới (C, D) và 12 cột cũ (E đến P). Tên Process nằm ở cột B.</li>
+    <li><strong>Output Mapping cho FMEA Template Micro:</strong>
+        <ul>
+            <li>Cột A (Template) &lt;--- Cột F (PFMEA gốc)</li>
+            <li>Cột B (Template) &lt;--- Cột D (PFMEA gốc)</li>
+            <li>Cột C (Template) &lt;--- Cột E (PFMEA gốc)</li>
+            <li>Cột D đến N (Template) &lt;--- Cột G đến Q (PFMEA gốc)</li>
+        </ul>
+    </li>
+    <li><strong>Output Mapping cho PCP Template Micro:</strong>
+        <ul>
+            <li>Cột A (Template) &lt;--- Cột C (PCP gốc)</li>
+            <li>Cột B (Template) &lt;--- Cột D (PCP gốc)</li>
+            <li>Cột C đến N (Template) &lt;--- Cột E đến P (PCP gốc)</li>
+        </ul>
+    </li>
+    <li><em>Lưu ý (Tối ưu hóa v1.1.0): Tích hợp thư viện SheetJS để đọc file Excel tốc độ cao (nhanh gấp 50 lần), chống treo trình duyệt. Quá trình xuất file cũng được tối ưu bằng cách load template một lần duy nhất và tái sử dụng, giúp giải quyết hoàn toàn lỗi tràn bộ nhớ (Memory Leak).</em></li>
+</ul>
+
+<h3>3. Cross-check Validation (Kiểm tra chéo)</h3>
+<table>
+    <tr>
+        <th>Check Type</th>
         <th>General Workcell</th>
         <th>Zebra Workcell</th>
     </tr>
     <tr>
-        <td><strong>PFMEA Sheet (Vị trí)</strong></td>
-        <td>Bắt đầu từ Dòng 33. Process ở Cột C (Index 2).</td>
-        <td>Bắt đầu từ Dòng 33. Process ở Cột C (Index 2).</td>
+        <td><strong>Row Count</strong></td>
+        <td>So sánh tổng số dòng của từng Process giữa PFMEA và PCP <span class="highlight">[ERROR]</span></td>
+        <td>Tương tự General <span class="highlight">[ERROR]</span></td>
     </tr>
     <tr>
-        <td><strong>PCP Sheet (Vị trí)</strong></td>
-        <td>Bắt đầu từ Dòng 30. Process ở Cột B (Index 1).</td>
-        <td>Bắt đầu từ Dòng 30. Process ở Cột B (Index 1).</td>
+        <td><strong>Empty Cells</strong></td>
+        <td>Kiểm tra ô trống trong vùng quét 12 cột <span class="highlight">[ERROR]</span></td>
+        <td>Kiểm tra ô trống trong vùng quét 14 cột <span class="highlight">[ERROR]</span></td>
     </tr>
     <tr>
-        <td><strong>PFMEA Data Columns (Quét)</strong></td>
-        <td>12 cột: F -> Q (Index 5 to 16)</td>
-        <td>14 cột: D, E, F -> Q (Index 3, 4, 5 to 16)</td>
-    </tr>
-    <tr>
-        <td><strong>PCP Data Columns (Quét)</strong></td>
-        <td>12 cột: E -> P (Index 4 to 15)</td>
-        <td>14 cột: C, D, E -> P (Index 2, 3, 4 to 15)</td>
-    </tr>
-    <tr>
-        <td><strong>Ánh xạ vào FMEA Template</strong></td>
-        <td>Ghi từ cột A tới cột L, bắt đầu từ dòng số 2.</td>
+        <td><strong>Data Matching</strong></td>
         <td>
-            Cột A &lt;-- F (gốc)<br>
-            Cột B &lt;-- D (gốc - ẩn)<br>
-            Cột C &lt;-- E (gốc - ẩn)<br>
-            Cột D tới N &lt;-- G tới Q (gốc)
+            So khớp 4 cặp:<br>
+            - PFMEA (F) vs PCP (F)<br>
+            - PFMEA (G) vs PCP (G)<br>
+            - PFMEA (H) vs PCP (H)<br>
+            - PFMEA (L) vs PCP (I)<br>
+        </td>
+        <td>
+            So khớp 6 cặp (Bổ sung thêm 2 cặp mới):<br>
+            - <strong>PFMEA (D) vs PCP (C) [Mới]</strong><br>
+            - <strong>PFMEA (E) vs PCP (D) [Mới]</strong><br>
+            - PFMEA (F) vs PCP (F)<br>
+            - PFMEA (G) vs PCP (G)<br>
+            - PFMEA (H) vs PCP (H)<br>
+            - PFMEA (L) vs PCP (I)<br>
         </td>
     </tr>
     <tr>
-        <td><strong>Ánh xạ vào PCP Template</strong></td>
-        <td>Ghi từ cột A tới cột L, bắt đầu từ dòng số 2.</td>
-        <td>
-            Cột A &lt;-- C (gốc - ẩn)<br>
-            Cột B &lt;-- D (gốc - ẩn)<br>
-            Cột C tới N &lt;-- E tới P (gốc)
-        </td>
+        <td><strong>Xử lý sai lệch</strong></td>
+        <td colspan="2">Sai khoảng trắng/định dạng: <span class="highlight">[WARNING]</span> | Khác biệt nội dung chữ: <span class="highlight">[ERROR]</span></td>
     </tr>
 </table>
 
-<h2>IV. CROSS-CHECK VALIDATION (KIỂM TRA CHÉO)</h2>
-<p>Bắt buộc kiểm tra logic sau trước khi xuất file. Bất kỳ lỗi nào xảy ra, Process đó sẽ bị loại bỏ khỏi File Zip.</p>
+<h3>4. Output Requirements & Logging (Xử lý Đầu ra & File Log)</h3>
 <table>
     <tr>
-        <th>Check Type</th>
-        <th>Điều kiện kích hoạt</th>
-        <th>Severity</th>
+        <th>#</th>
+        <th>Output Element</th>
+        <th>Format</th>
+        <th>Description & Conventions</th>
     </tr>
     <tr>
-        <td><strong>Row Count Mismatch</strong></td>
-        <td>Tổng số dòng lấy được của Process X ở sheet PFMEA khác với ở sheet PCP.</td>
-        <td><span class="badge badge-error">ERROR</span></td>
+        <td>1</td>
+        <td><strong>FMEA Process File</strong></td>
+        <td>.xlsx</td>
+        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_FMEA.xlsx</code></td>
     </tr>
     <tr>
-        <td><strong>Empty Cells Detected</strong></td>
-        <td>Một trong các ô thuộc vùng dữ liệu quét (12 cột hoặc 14 cột) bị rỗng (null/undefined/chuỗi rỗng).</td>
-        <td><span class="badge badge-error">ERROR</span></td>
+        <td>2</td>
+        <td><strong>PCP Process File</strong></td>
+        <td>.xlsx</td>
+        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_PCP.xlsx</code></td>
     </tr>
     <tr>
-        <td><strong>Data Matching (Khác biệt chữ)</strong></td>
-        <td>Nội dung các cặp kiểm tra chéo không giống nhau hoàn toàn. Các cặp General: (PFMEA-F vs PCP-F), (G vs G), (H vs H), (L vs I). Các cặp Zebra thêm: (PFMEA-D vs PCP-C), (PFMEA-E vs PCP-D).</td>
-        <td><span class="badge badge-error">ERROR</span></td>
+        <td>3</td>
+        <td><strong>System Log</strong></td>
+        <td>.txt</td>
+        <td>Execution log recorded entirely in <strong>English</strong>. Timestamped <code>[YYYY-MM-DD HH:MM:SS]</code>, aggregates total counts of <strong>[ERROR]</strong> and <strong>[WARNING]</strong>. Indicates whether processing was General or Zebra mode.</td>
     </tr>
     <tr>
-        <td><strong>Data Matching (Sai khoảng trắng)</strong></td>
-        <td>Nội dung chữ giống nhau nhưng dư thừa khoảng trắng đầu/cuối. (Kiểm tra bằng <code>.trim().replace(/\s+/g, ' ')</code>).</td>
-        <td><span class="badge badge-warn">WARNING</span> (Vẫn cho phép xuất file).</td>
+        <td>4</td>
+        <td><strong>Download Package</strong></td>
+        <td>.zip</td>
+        <td>A single compressed package. <br><em>Naming Convention:</em> <code>Report_[YYYYMMDD_HHMMSS].zip</code></td>
     </tr>
 </table>
 
-<h2>V. OUTPUT & LOGGING</h2>
+<h3>5. Giao diện Người dùng (UI)</h3>
 <ul>
-    <li><strong>File Log (.txt):</strong> Phải hiển thị cấu trúc sau:
+    <li><strong>Tabs Navigation:</strong> Chuyển đổi giữa 2 chế độ "General Workcell" và "Zebra Workcell" bằng Tab ở đầu trang.</li>
+    <li><strong>Chủ đề (Theme):</strong> Thiết kế tối giản, tông màu Trắng - Xanh biển. Có nút chuyển đổi Sáng/Tối.</li>
+    <li><strong>Đa ngôn ngữ:</strong> Nút chuyển đổi (Toggle) giữa Tiếng Việt và Tiếng Anh.</li>
+    <li><strong>Footer:</strong> Chân trang hiển thị phiên bản (v1.1.0) và nút Release Notes.</li>
+</ul>
+
+<hr>
+<h2>II. CHIẾN LƯỢC QUẢN LÝ PHIÊN BẢN (VERSIONING)</h2>
+<ul>
+    <li><strong>1. Áp dụng Semantic Versioning (Major.Minor.Patch):</strong>
         <ul>
-            <li>Header: <code>--- GENERAL/ZEBRA SESSION STARTED ---</code></li>
-            <li>Summary: <code>Total Processes: X, Success: Y, Errors: Z</code></li>
-            <li>Body: Liệt kê chi tiết từng cảnh báo/lỗi, kèm theo Process Name và Timestamp.</li>
+            <li>Minor (v1.1.0): Cập nhật tính năng Zebra Workcell, chuyển đổi kiến trúc đọc dữ liệu sang SheetJS và tối ưu vòng lặp để xử lý dứt điểm tình trạng tràn bộ nhớ.</li>
+            <li>Patch (v1.0.1): Sửa lỗi vặt, không thay đổi chức năng.</li>
+            <li>Major (v2.0.0): Cập nhật lớn, thay đổi logic cốt lõi hoặc UI/UX.</li>
         </ul>
     </li>
-    <li><strong>Yield To UI:</strong> Javascript là đơn luồng (Single-thread). Giữa mỗi thao tác nặng (đọc file, ghi file Zip), bắt buộc phải có lệnh <code>await new Promise(r =&gt; setTimeout(r, 50));</code> để trả CPU về cho trình duyệt, giúp giao diện không bị đơ và cập nhật được Log / Progress Bar.</li>
+    <li><strong>2. Release Notes (Lịch sử cập nhật):</strong> Tích hợp nút "Release Notes / Lịch sử cập nhật" ở Footer của Web App.</li>
+    <li><strong>3. Quản lý Yêu cầu (Requirements):</strong> File BRD được lưu trữ và cập nhật tương ứng với từng phiên bản. <em>(Chi tiết kỹ thuật cấp cao xem thêm tại tài liệu SRS)</em>.</li>
 </ul>
 
 </body>
