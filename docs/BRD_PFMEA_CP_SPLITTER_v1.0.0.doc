@@ -1,0 +1,145 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset='utf-8'>
+<title>BRD - PFMEA-CP SPLITTER v1.0.0</title>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.5; }
+h1, h2, h3, h4 { color: #2c3e50; }
+.highlight { font-weight: bold; color: #d35400; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+th, td { border: 1px solid #bdc3c7; padding: 8px; text-align: left; }
+th { background-color: #f8f9fa; }
+</style>
+</head>
+<body>
+
+<h1>BUSINESS REQUIREMENT DOCUMENT (BRD)</h1>
+<h2>Project: PFMEA-CP SPLITTER BY PROCESS FOR GENERAL WORKCELL</h2>
+<p><strong>Version:</strong> 1.0.0</p>
+<hr>
+
+<h2>I. YÊU CẦU CHỨC NĂNG WEB APP</h2>
+
+<h3>1. Input Requirements (Quản lý Đầu vào)</h3>
+<table>
+    <tr>
+        <th>#</th>
+        <th>Input Element</th>
+        <th>Format</th>
+        <th>Mandatory</th>
+        <th>Description & Constraints</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td><strong>Source Workbook</strong></td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>Dữ liệu gốc chứa sheet PFMEA (quét từ cột F) và PCP (quét từ cột E).</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><strong>FMEA Template</strong></td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>File Excel mẫu (Template) để đổ dữ liệu FMEA vào.</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><strong>PCP Template</strong></td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>File Excel mẫu (Template) để đổ dữ liệu PCP vào.</td>
+    </tr>
+</table>
+
+<h3>2. Data Reading & Output Mapping (Đọc và Ánh xạ dữ liệu)</h3>
+<ul>
+    <li><strong>Vùng quét PFMEA:</strong> Quét từ dòng 33. Tên Process ở cột C. Dữ liệu chi tiết nằm ở 12 cột tính từ cột F.</li>
+    <li><strong>Vùng quét PCP:</strong> Quét từ dòng 30. Tên Process ở cột B. Dữ liệu chi tiết nằm ở 12 cột tính từ cột E.</li>
+    <li><strong>Gom nhóm dữ liệu:</strong> Dữ liệu gom theo Process và bắt buộc phải liên tục.</li>
+    <li><strong>Xử lý khoảng trống bất thường:</strong> Hệ thống quét toàn bộ file để tìm dòng cuối cùng thực sự. Nếu phát hiện một khoảng trống lớn (VD: 15 dòng trống liên tiếp) nhưng bên dưới vẫn còn dữ liệu, hệ thống sẽ ghi một WARNING (hoặc ERROR) vào file log: "Detected too many empty rows between data rows (Data is not continuous)". Đồng thời, hủy bỏ hoàn toàn việc tách file (Không xuất ra Excel). Hệ thống chỉ trả về file log.txt để người dùng vào file gốc sửa lại cho liền mạch.</li>
+    <li><strong>Output Mapping:</strong> Đổ thẳng 12 cột vào Template bắt đầu từ cột A, từ dòng số 2.</li>
+</ul>
+
+<h3>3. Cross-check Validation (Kiểm tra chéo)</h3>
+<table>
+    <tr>
+        <th>Check Type</th>
+        <th>Description</th>
+        <th>Action</th>
+    </tr>
+    <tr>
+        <td><strong>Row Count</strong></td>
+        <td>So sánh tổng số dòng của từng Process giữa PFMEA và PCP.</td>
+        <td><span class="highlight">[ERROR]</span> - Bỏ qua Process</td>
+    </tr>
+    <tr>
+        <td><strong>Empty Cells</strong></td>
+        <td>Kiểm tra ô trống trong vùng quét 12 cột.</td>
+        <td><span class="highlight">[ERROR]</span></td>
+    </tr>
+    <tr>
+        <td><strong>Data Matching</strong></td>
+        <td>So khớp 4 cặp: PFMEA (F) vs PCP (F), PFMEA (G) vs PCP (G), PFMEA (H) vs PCP (H), PFMEA (L) vs PCP (I).</td>
+        <td>Sai khoảng trắng: <span class="highlight">[WARNING]</span><br>Sai khác hoàn toàn: <span class="highlight">[ERROR]</span></td>
+    </tr>
+</table>
+
+<h3>4. Output Requirements & Logging (Xử lý Đầu ra & File Log)</h3>
+<table>
+    <tr>
+        <th>#</th>
+        <th>Output Element</th>
+        <th>Format</th>
+        <th>Description & Conventions</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td><strong>FMEA Process File</strong></td>
+        <td>.xlsx</td>
+        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_FMEA.xlsx</code></td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><strong>PCP Process File</strong></td>
+        <td>.xlsx</td>
+        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_PCP.xlsx</code></td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><strong>System Log</strong></td>
+        <td>.txt</td>
+        <td>Execution log recorded entirely in <strong>English</strong>. Timestamped <code>[YYYY-MM-DD HH:MM:SS]</code>, aggregates total counts of <strong>[ERROR]</strong> and <strong>[WARNING]</strong>.</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td><strong>Download Package</strong></td>
+        <td>.zip</td>
+        <td>A single compressed package containing all valid Excel files and the log file. <br><em>Naming Convention:</em> <code>Report_[YYYYMMDD_HHMMSS].zip</code></td>
+    </tr>
+</table>
+
+<h3>5. Giao diện Người dùng (UI)</h3>
+<ul>
+    <li><strong>Chủ đề (Theme):</strong> Thiết kế tối giản, tông màu Trắng - Xanh biển. Có nút chuyển đổi Sáng/Tối.</li>
+    <li><strong>Đa ngôn ngữ:</strong> Nút chuyển đổi (Toggle) giữa Tiếng Việt và Tiếng Anh.</li>
+    <li><strong>Footer:</strong> Chân trang hiển thị phiên bản phần mềm.</li>
+</ul>
+
+<hr>
+<h2>II. CHIẾN LƯỢC QUẢN LÝ PHIÊN BẢN (VERSIONING)</h2>
+<ul>
+    <li><strong>1. Áp dụng Semantic Versioning (Major.Minor.Patch):</strong>
+        <ul>
+            <li>Patch (v1.0.1): Sửa lỗi vặt, không thay đổi chức năng.</li>
+            <li>Minor (v1.1.0): Cập nhật tính năng mới, không làm ảnh hưởng tính năng cũ.</li>
+            <li>Major (v2.0.0): Cập nhật lớn, thay đổi logic cốt lõi hoặc UI/UX.</li>
+        </ul>
+    </li>
+    <li><strong>2. Release Notes (Lịch sử cập nhật):</strong> Tích hợp nút "Release Notes" ở Footer của Web App.</li>
+    <li><strong>3. Quản lý Yêu cầu (Requirements):</strong> File BRD được lưu trữ và cập nhật tương ứng với từng phiên bản.</li>
+    <li><strong>4. Version Control (Git):</strong> Sử dụng Git để quản lý mã nguồn.</li>
+</ul>
+
+</body>
+</html>

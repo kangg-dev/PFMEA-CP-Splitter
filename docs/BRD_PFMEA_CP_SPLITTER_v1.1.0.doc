@@ -1,0 +1,214 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset='utf-8'>
+<title>BRD - PFMEA-CP SPLITTER v1.1.0</title>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.5; }
+h1, h2, h3, h4 { color: #2c3e50; }
+.highlight { font-weight: bold; color: #d35400; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+th, td { border: 1px solid #bdc3c7; padding: 8px; text-align: left; }
+th { background-color: #f8f9fa; }
+</style>
+</head>
+<body>
+
+<h1>BUSINESS REQUIREMENT DOCUMENT (BRD)</h1>
+<h2>Project: PFMEA-CP SPLITTER BY PROCESS (GENERAL & Zebra WORKCELL)</h2>
+<p><strong>Version:</strong> 1.1.0</p>
+<hr>
+
+<h2>I. YÊU CẦU CHỨC NĂNG WEB APP</h2>
+
+<h3>1. Input Requirements (Quản lý Đầu vào)</h3>
+<p>Web App bao gồm 2 Tab hoạt động độc lập: <strong>General Workcell</strong> và <strong>Zebra Workcell</strong>.</p>
+<table>
+    <tr>
+        <th>#</th>
+        <th>Input Element</th>
+        <th>Mode</th>
+        <th>Format</th>
+        <th>Mandatory</th>
+        <th>Description & Constraints</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td><strong>Source Workbook</strong></td>
+        <td>General</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>Dữ liệu gốc chứa sheet PFMEA (quét từ cột F) và PCP (quét từ cột E).</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><strong>FMEA Template</strong></td>
+        <td>General</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>FMEA Template chuẩn.</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><strong>PCP Template</strong></td>
+        <td>General</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>PCP Template chuẩn.</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td><strong>Source Workbook (Zebra)</strong></td>
+        <td>Zebra</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>File gốc Zebra. 12 cột giữ nguyên, bổ sung thêm 2 cột ẩn: D, E (PFMEA) và C, D (PCP).</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td><strong>FMEA Template Micro (Zebra)</strong></td>
+        <td>Zebra</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>Template bị chèn thêm 2 cột ở vị trí B và C.</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td><strong>PCP Template Micro (Zebra)</strong></td>
+        <td>Zebra</td>
+        <td>.xlsx, .xlsm</td>
+        <td>Yes</td>
+        <td>Template bị chèn thêm 2 cột ở vị trí A và B.</td>
+    </tr>
+</table>
+
+<h3>2. Data Reading & Output Mapping (Đọc và Ánh xạ dữ liệu)</h3>
+
+<h4>2.1. General Workcell (Chế độ cũ)</h4>
+<ul>
+    <li><strong>Quét dữ liệu:</strong> PFMEA quét 12 cột từ cột F; PCP quét 12 cột từ cột E. Tên Process nằm ở cột C (PFMEA) và B (PCP). Bắt buộc dữ liệu liên tục.</li>
+    <li><strong>Output Mapping:</strong> Đổ thẳng 12 cột vào Template bắt đầu từ cột A.</li>
+</ul>
+
+<h4>2.2. Zebra Workcell (Chế độ mới)</h4>
+<ul>
+    <li><strong>Quét dữ liệu PFMEA (14 cột):</strong> Đọc 2 cột mới (D, E) và 12 cột cũ (F đến Q). Tên Process nằm ở cột C.</li>
+    <li><strong>Quét dữ liệu PCP (14 cột):</strong> Đọc 2 cột mới (C, D) và 12 cột cũ (E đến P). Tên Process nằm ở cột B.</li>
+    <li><strong>Output Mapping cho FMEA Template Micro:</strong>
+        <ul>
+            <li>Cột A (Template) &lt;--- Cột F (PFMEA gốc)</li>
+            <li>Cột B (Template) &lt;--- Cột D (PFMEA gốc)</li>
+            <li>Cột C (Template) &lt;--- Cột E (PFMEA gốc)</li>
+            <li>Cột D đến N (Template) &lt;--- Cột G đến Q (PFMEA gốc)</li>
+        </ul>
+    </li>
+    <li><strong>Output Mapping cho PCP Template Micro:</strong>
+        <ul>
+            <li>Cột A (Template) &lt;--- Cột C (PCP gốc)</li>
+            <li>Cột B (Template) &lt;--- Cột D (PCP gốc)</li>
+            <li>Cột C đến N (Template) &lt;--- Cột E đến P (PCP gốc)</li>
+        </ul>
+    </li>
+    <li><em>Lưu ý (Tối ưu hóa v1.1.0): Tích hợp thư viện SheetJS để đọc file Excel tốc độ cao (nhanh gấp 50 lần), chống treo trình duyệt. Quá trình xuất file cũng được tối ưu bằng cách load template một lần duy nhất và tái sử dụng, giúp giải quyết hoàn toàn lỗi tràn bộ nhớ (Memory Leak) với các file có định dạng phức tạp. Nếu phát hiện dữ liệu ngắt quãng (quá 15 dòng trống), hệ thống xuất ERROR.</em></li>
+</ul>
+
+<h3>3. Cross-check Validation (Kiểm tra chéo)</h3>
+<table>
+    <tr>
+        <th>Check Type</th>
+        <th>General Workcell</th>
+        <th>Zebra Workcell</th>
+    </tr>
+    <tr>
+        <td><strong>Row Count</strong></td>
+        <td>So sánh tổng số dòng của từng Process giữa PFMEA và PCP <span class="highlight">[ERROR]</span></td>
+        <td>Tương tự General <span class="highlight">[ERROR]</span></td>
+    </tr>
+    <tr>
+        <td><strong>Empty Cells</strong></td>
+        <td>Kiểm tra ô trống trong vùng quét 12 cột <span class="highlight">[ERROR]</span></td>
+        <td>Kiểm tra ô trống trong vùng quét 14 cột <span class="highlight">[ERROR]</span></td>
+    </tr>
+    <tr>
+        <td><strong>Data Matching</strong></td>
+        <td>
+            So khớp 4 cặp:<br>
+            - PFMEA (F) vs PCP (F)<br>
+            - PFMEA (G) vs PCP (G)<br>
+            - PFMEA (H) vs PCP (H)<br>
+            - PFMEA (L) vs PCP (I)<br>
+        </td>
+        <td>
+            So khớp 6 cặp (Bổ sung thêm 2 cặp mới):<br>
+            - <strong>PFMEA (D) vs PCP (C) [Mới]</strong><br>
+            - <strong>PFMEA (E) vs PCP (D) [Mới]</strong><br>
+            - PFMEA (F) vs PCP (F)<br>
+            - PFMEA (G) vs PCP (G)<br>
+            - PFMEA (H) vs PCP (H)<br>
+            - PFMEA (L) vs PCP (I)<br>
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Xử lý sai lệch</strong></td>
+        <td colspan="2">Sai khoảng trắng/định dạng: <span class="highlight">[WARNING]</span> | Khác biệt nội dung chữ: <span class="highlight">[ERROR]</span></td>
+    </tr>
+</table>
+
+<h3>4. Output Requirements & Logging (Xử lý Đầu ra & File Log)</h3>
+<table>
+    <tr>
+        <th>#</th>
+        <th>Output Element</th>
+        <th>Format</th>
+        <th>Description & Conventions</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td><strong>FMEA Process File</strong></td>
+        <td>.xlsx</td>
+        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_FMEA.xlsx</code></td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><strong>PCP Process File</strong></td>
+        <td>.xlsx</td>
+        <td>Generated when source data is valid. <br><em>Naming Convention:</em> <code>[Process_Name]_PCP.xlsx</code></td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><strong>System Log</strong></td>
+        <td>.txt</td>
+        <td>Execution log recorded entirely in <strong>English</strong>. Timestamped <code>[YYYY-MM-DD HH:MM:SS]</code>, aggregates total counts of <strong>[ERROR]</strong> and <strong>[WARNING]</strong>. Indicates whether processing was General or Zebra mode.</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td><strong>Download Package</strong></td>
+        <td>.zip</td>
+        <td>A single compressed package. <br><em>Naming Convention:</em> <code>Report_[YYYYMMDD_HHMMSS].zip</code></td>
+    </tr>
+</table>
+
+<h3>5. Giao diện Người dùng (UI)</h3>
+<ul>
+    <li><strong>Tabs Navigation:</strong> Chuyển đổi giữa 2 chế độ "General Workcell" và "Zebra Workcell" bằng Tab ở đầu trang.</li>
+    <li><strong>Chủ đề (Theme):</strong> Thiết kế tối giản, tông màu Trắng - Xanh biển. Có nút chuyển đổi Sáng/Tối.</li>
+    <li><strong>Đa ngôn ngữ:</strong> Nút chuyển đổi (Toggle) giữa Tiếng Việt và Tiếng Anh.</li>
+    <li><strong>Footer:</strong> Chân trang hiển thị phiên bản (v1.1.0) và nút Release Notes.</li>
+</ul>
+
+<hr>
+<h2>II. CHIẾN LƯỢC QUẢN LÝ PHIÊN BẢN (VERSIONING)</h2>
+<ul>
+    <li><strong>1. Áp dụng Semantic Versioning (Major.Minor.Patch):</strong>
+        <ul>
+            <li>Minor (v1.1.0): Cập nhật tính năng Zebra Workcell, chuyển đổi kiến trúc đọc dữ liệu sang SheetJS và tối ưu vòng lặp để xử lý dứt điểm tình trạng tràn bộ nhớ.</li>
+            <li>Patch (v1.0.1): Sửa lỗi vặt, không thay đổi chức năng.</li>
+            <li>Major (v2.0.0): Cập nhật lớn, thay đổi logic cốt lõi hoặc UI/UX.</li>
+        </ul>
+    </li>
+    <li><strong>2. Release Notes (Lịch sử cập nhật):</strong> Tích hợp nút "Release Notes / Lịch sử cập nhật" ở Footer của Web App.</li>
+    <li><strong>3. Quản lý Yêu cầu (Requirements):</strong> File BRD được lưu trữ và cập nhật tương ứng với từng phiên bản.</li>
+    <li><strong>4. Version Control (Git):</strong> Sử dụng Git để quản lý mã nguồn.</li>
+</ul>
+
+</body>
+</html>
